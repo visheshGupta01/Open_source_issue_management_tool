@@ -25,7 +25,9 @@ static void prepare_product(const int64_t*a,const int64_t*b,int64_t*s,int64_t*t,
 }
 static void strassen(const int64_t*a,const int64_t*b,int64_t*c,size_t n){
  if(n<=32){classical(a,b,c,n);return;}
- size_t h=n/2,z=h*h;int64_t*q=calloc(11*z,sizeof(int64_t));
+ size_t h=n/2,z=h*h;
+ if(z>SIZE_MAX/(11*sizeof(int64_t))){classical(a,b,c,n);return;}
+ int64_t*q=calloc(11*z,sizeof(int64_t));
  if(!q){classical(a,b,c,n);return;}
  int64_t*s=q,*t=s+z,*p1=t+z,*p2=p1+z,*p3=p2+z,*p4=p3+z,*p5=p4+z,*p6=p5+z,*p7=p6+z;
  int64_t*products[]={p1,p2,p3,p4,p5,p6,p7};
