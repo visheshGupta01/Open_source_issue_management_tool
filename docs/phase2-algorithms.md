@@ -1,30 +1,55 @@
-# Phase 2 — Algorithm Laboratory
+# Phase 2 — Algorithms and issue-triage integration
 
-All algorithms are implemented manually in C11 and are independent of the command-line interface.
+Phase 2 contains both a reusable algorithm laboratory and algorithms connected to actual IssueForge data.
+
+## Algorithms integrated into the product
+
+| Algorithm | Project feature | Complexity |
+|---|---|---:|
+| Merge Sort | Sort issue records by ID, priority, severity, deadline or estimated effort | O(n log n) time, O(n) extra space |
+| Binary Search | Find an issue by ID after sorting records by ascending ID | O(log n) time, O(1) extra space |
+
+### Issue sorting rules
+
+- Priority: critical, high, medium, low, then unrecognized values.
+- Severity: highest numeric severity first.
+- Deadline: fewest days remaining first.
+- Estimated effort: lowest estimated hours first.
+- ID: ascending numeric order.
+
+The sort is stable: records with equal sort keys keep their relative input order. Sorting changes the in-memory issue array order but does not modify the CSV file.
+
+### Issue lookup
+
+The CLI's search action first sorts the in-memory records by ID with Merge Sort, then uses iterative Binary Search. The search API itself expects an array already sorted by ascending ID and returns a zero-based index or -1.
+
+## Other Phase 2 algorithms
 
 | Algorithm | Purpose | Time complexity | Extra space |
 |---|---|---:|---:|
-| Merge sort | Stable integer sorting | O(n log n) | O(n) |
-| Quick sort | In-place integer sorting | Average O(n log n), worst O(n²) | O(log n) typical stack |
-| Iterative binary search | Search sorted data | O(log n) | O(1) |
-| Recursive binary search | Recursive sorted-data search | O(log n) | O(log n) |
-| Maximum subarray | Best contiguous workload interval | O(n log n) | O(log n) |
+| Quick Sort | In-place integer sorting demonstration | Average O(n log n), worst O(n²) | O(log n) typical stack |
+| Recursive Binary Search | Recursive sorted-data search demonstration | O(log n) | O(log n) |
+| Maximum subarray | Best contiguous interval in a numeric sequence | O(n log n) | O(log n) |
 | Fast exponentiation | Compute a^b by squaring | O(log |b|) | O(1) |
-| Celebrity problem | Person known by everyone who knows nobody | O(n) | O(1) |
+| Celebrity problem | Identify a person known by everyone who knows nobody | O(n) | O(1) |
 | Classical matrix multiplication | Square matrix product | O(n³) | O(1) auxiliary |
 | Strassen multiplication | Divide-and-conquer matrix product | O(n^log₂7) asymptotically | O(n²) auxiliary per active level |
 
-## Design notes
+These remaining algorithms are retained as DAA demonstrations and tests; they are not forced into the issue-triage workflow where their use would be artificial.
 
-- Merge sort uses one temporary array and is stable.
-- Quick sort uses a middle pivot and recurses into the smaller partition first.
-- Binary search requires ascending input and returns a zero-based index or -1.
-- Maximum subarray returns the sum and inclusive start/end indices; all-negative arrays are supported.
-- Fast exponentiation supports negative exponents and rejects zero to a negative exponent. Results use double.
-- Celebrity input is a row-major count-by-count byte matrix; nonzero means the row person knows the column person.
-- Matrix functions use row-major square int64_t matrices. Strassen pads non-power-of-two dimensions and switches to classical multiplication at size 32 or less.
-- Integer overflow is not checked; choose values whose intermediate sums and products fit in int64_t.
+## CLI demonstration
+
+1. Load sample repository data.
+2. Choose **Sort real issues** and select a criterion.
+3. Choose **Search issue by ID** and enter an ID such as 106.
+4. Try an unknown ID such as 999 to see the not-found result.
 
 ## Tests
 
-The Phase 2 test target covers sorting, both search variants, maximum-subarray edge cases, positive and negative powers, celebrity detection, and agreement between classical and Strassen multiplication on a non-power-of-two matrix.
+The issue workflow test loads the sample CSV and verifies priority ordering, deadline ordering, ID ordering, successful lookup, missing lookup and invalid input handling. Run all suites with:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+The algorithm laboratory also covers sorting, both search variants, maximum-subarray edge cases, positive and negative powers, celebrity detection, and agreement between classical and Strassen multiplication on a non-power-of-two matrix.
