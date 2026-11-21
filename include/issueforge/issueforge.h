@@ -22,6 +22,7 @@ typedef struct {
     size_t label_count;
     int dependencies[IF_LIST];
     size_t dependency_count;
+    int assigned_developer_id; /* 0 means not assigned */
 } Issue;
 
 typedef struct {
