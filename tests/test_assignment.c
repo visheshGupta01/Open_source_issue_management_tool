@@ -26,6 +26,8 @@ int main(void) {
                               &data, error, sizeof(error)) == 0);
 
     assert(if_assign_issues_greedy(&data, &summary) == 0);
+    fprintf(stderr, "DEBUG assigned=%zu unassigned=%zu skipped=%zu\\n", summary.assigned_count, summary.unassigned_count, summary.skipped_count);
+    for (size_t i = 0; i < data.issue_count; ++i) fprintf(stderr, "DEBUG issue %d -> %d (%s, %s)\\n", data.issues[i].id, data.issues[i].assigned_developer_id, data.issues[i].status, data.issues[i].priority);
     assert(summary.assigned_count == 5);
     assert(summary.unassigned_count == 2);
     assert(summary.skipped_count == 1);
