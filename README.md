@@ -1,22 +1,40 @@
 # Open Source Issue Triage Tool
 
-A Design and Analysis of Algorithms project implemented in **C11**.
+A Design and Analysis of Algorithms (DAA) project implemented in **C11**.
 
-## Phase 1 — Foundation
+The application loads software issues and developer records from CSV files, validates the data, detects circular dependencies, and provides issue sorting and searching through a command-line interface.
+
+## Algorithms used in the actual workflow
+
+| Algorithm | Where it is used | Purpose |
+|---|---|---|
+| Merge Sort | Issue sorting | Sort issue records by ID, priority, severity, deadline or estimated effort |
+| Binary Search | Issue lookup | Find an issue by ID after sorting records by ID |
+| Depth First Search (DFS) | Repository validation | Detect circular dependencies between issues |
+
+Only algorithms that solve a real issue-management task are included. Standalone algorithm demonstrations have been removed.
+
+### How the algorithms work together
+
+1. The program loads issues and developers from CSV files.
+2. Validation checks required fields, IDs, priorities, statuses and dependency references.
+3. DFS checks the dependency graph for cycles.
+4. Merge Sort orders the real issue records using the selected criterion.
+5. Binary Search locates an issue by ID in the list sorted by ascending ID.
+
+## Features
+
 - C structures for Issue, Developer and RepositoryData.
-- CSV parser and loading for issue/developer datasets.
-- Field and dependency validation, including DFS dependency-cycle detection.
-- Menu-driven CLI and automated CTest coverage.
-
-## Phase 2 — Algorithms applied to issue triage
-- **Merge Sort** orders the actual issue records by ID, priority, severity, deadline or estimated effort.
-- **Binary Search** finds an issue by ID in the issue list after it is sorted by ID.
-- The algorithm laboratory retains demonstrations and tests for Quick Sort, recursive/iterative binary search, maximum subarray, fast exponentiation, celebrity identification, and classical/Strassen matrix multiplication.
-- Integration tests load the sample CSV and verify sorting and lookup against real project records.
-
-The practical workflow is available from CLI options 6 and 7. Option 5 remains the standalone algorithm laboratory.
+- CSV parsing with quoted fields, commas and escaped double quotes.
+- Validation of issue and developer records.
+- Dependency checks for missing, repeated and self-references.
+- DFS-based circular dependency detection.
+- Stable Merge Sort for real issue records.
+- Binary Search for issue lookup by ID.
+- Automated tests for loading, validation, cycle detection, sorting and searching.
 
 ## Build and run
+
 Requirements: GCC or Clang with C11 support and CMake 3.16+.
 
 ```bash
@@ -26,42 +44,46 @@ ctest --test-dir build --output-on-failure
 ./build/issueforge
 ```
 
-Run from the repository root so sample CSV paths resolve. Select option 1 to load sample data before viewing, sorting or searching issues.
+Run the application from the repository root so the sample CSV paths resolve. Select option 1 to load data before viewing, validating, sorting or searching.
+
+## CLI menu
+
+1. Load sample repository data
+2. View issues
+3. View developers
+4. Validate repository (includes DFS cycle detection)
+5. Sort real issues (Merge Sort)
+6. Search issue by ID (Binary Search)
+0. Exit
 
 ## CSV format
-Issues: id,title,status,priority,module,hours,severity,deadline,labels,dependencies
 
-Developers: id,name,skills,available_hours,experience
+Issues: `id,title,status,priority,module,hours,severity,deadline,labels,dependencies`
+
+Developers: `id,name,skills,available_hours,experience`
 
 Labels, skills and dependency IDs are semicolon-separated. Quote CSV fields containing commas; escape embedded double quotes by doubling them.
 
 ## Project structure
+
 ```text
-include/issueforge/issueforge.h       Phase 1 domain API
-include/issueforge/algorithms.h       Phase 2 algorithm API
-include/issueforge/issue_workflow.h  Issue sorting/search API
+include/issueforge/issueforge.h       Data structures and core API
+include/issueforge/issue_workflow.h   Issue sorting/search API
 src/csv.c                             CSV parsing and loading
-src/validation.c                      Data validation and DFS cycle detection
-src/algorithms_sort_search.c          Generic sorting and searching
-src/algorithms_divide_conquer.c       Maximum subarray, power and celebrity
-src/algorithms_matrix.c               Classical and Strassen multiplication
-src/issue_workflow.c                  Merge Sort and Binary Search on Issue records
-src/main.c                            CLI and demonstrations
-tests/test_foundation.c               Phase 1 tests
-tests/test_algorithms.c               Phase 2 algorithm tests
-tests/test_issue_workflow.c           Real-data integration tests
-docs/phase2-algorithms.md              Complexity and design notes
-data/sample/                          Synthetic sample CSV datasets
+src/validation.c                      Field validation and DFS cycle detection
+src/issue_workflow.c                  Merge Sort and Binary Search on issues
+src/main.c                            Command-line interface
+tests/test_foundation.c               CSV, validation and DFS tests
+tests/test_issue_workflow.c           Integrated sorting/search tests
+docs/architecture.md                  Architecture and dependency graph
+docs/phase2-algorithms.md              Integrated algorithm explanations
+data/sample/                          Sample CSV datasets
 ```
 
-## Roadmap
-| Phase | Scope | Status |
-|---|---|---|
-| 1 | Data models, CSV loading, validation and dependency-cycle detection | Implemented |
-| 2 | Algorithm laboratory plus issue sorting and searching integration | Implemented |
-| 3 | Greedy, graph and dynamic programming | Planned |
-| 4 | Backtracking, branch and bound, flow | Planned |
-| 5 | Number theory and string matching | Planned |
-| 6 | Integration, evaluation and final documentation | Planned |
+## Complexity
 
-The included dataset is synthetic and intended for demonstration. See docs/phase2-algorithms.md for complexity analysis and implementation notes.
+- Merge Sort: O(n log n) time and O(n) auxiliary space.
+- Binary Search: O(log n) time and O(1) auxiliary space.
+- DFS traversal: O(V + E) when the graph is represented with adjacency lists. This implementation resolves dependency IDs by scanning the issue array, so dependency lookup adds linear work per edge.
+
+The sample dataset is synthetic and intended for demonstration.
