@@ -2,7 +2,7 @@ id,title,status,priority,module,hours,severity,deadline,labels,dependencies
 101,Fix login validation,open,high,authentication,5,8,3,bug;backend,
 102,Improve dashboard layout,open,medium,frontend,4,5,7,ui;good-first-issue,
 103,Add password reset,in_progress,critical,authentication,8,9,2,feature;backend,101
-104,Optimize issue search,open,high,search,6,7,5,performance;algorithm,
+104,Optimize issue search,open,high,search,6,7,5,performance;algorithms,
 105,Write API documentation,open,low,documentation,3,3,14,docs,
 106,Add developer profile page,blocked,medium,frontend,7,6,9,feature;ui,102
 107,Fix CSV import edge cases,open,high,import,5,8,4,bug;data,
