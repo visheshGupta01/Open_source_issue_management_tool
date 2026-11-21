@@ -1,55 +1,67 @@
-# Phase 2 — Algorithms and issue-triage integration
+# Phase 2 — Algorithms integrated into issue triage
 
-Phase 2 contains both a reusable algorithm laboratory and algorithms connected to actual IssueForge data.
+This phase uses only algorithms that directly support the IssueForge workflow. There is no separate algorithm laboratory.
 
-## Algorithms integrated into the product
+## 1. Merge Sort — issue prioritization
 
-| Algorithm | Project feature | Complexity |
-|---|---|---:|
-| Merge Sort | Sort issue records by ID, priority, severity, deadline or estimated effort | O(n log n) time, O(n) extra space |
-| Binary Search | Find an issue by ID after sorting records by ascending ID | O(log n) time, O(1) extra space |
+Merge Sort is used to sort the actual `Issue` structures.
 
-### Issue sorting rules
+The user can sort issues by:
 
-- Priority: critical, high, medium, low, then unrecognized values.
-- Severity: highest numeric severity first.
+- ID: ascending.
+- Priority: critical, high, medium, low.
+- Severity: highest numeric value first.
 - Deadline: fewest days remaining first.
-- Estimated effort: lowest estimated hours first.
-- ID: ascending numeric order.
+- Estimated effort: lowest hours first.
 
-The sort is stable: records with equal sort keys keep their relative input order. Sorting changes the in-memory issue array order but does not modify the CSV file.
+The implementation is stable, so issues with equal sort keys keep their original relative order.
 
-### Issue lookup
+**Complexity:** O(n log n) time and O(n) auxiliary space.
 
-The CLI's search action first sorts the in-memory records by ID with Merge Sort, then uses iterative Binary Search. The search API itself expects an array already sorted by ascending ID and returns a zero-based index or -1.
+## 2. Binary Search — issue lookup
 
-## Other Phase 2 algorithms
+Binary Search finds an issue using its ID.
 
-| Algorithm | Purpose | Time complexity | Extra space |
-|---|---|---:|---:|
-| Quick Sort | In-place integer sorting demonstration | Average O(n log n), worst O(n²) | O(log n) typical stack |
-| Recursive Binary Search | Recursive sorted-data search demonstration | O(log n) | O(log n) |
-| Maximum subarray | Best contiguous interval in a numeric sequence | O(n log n) | O(log n) |
-| Fast exponentiation | Compute a^b by squaring | O(log |b|) | O(1) |
-| Celebrity problem | Identify a person known by everyone who knows nobody | O(n) | O(1) |
-| Classical matrix multiplication | Square matrix product | O(n³) | O(1) auxiliary |
-| Strassen multiplication | Divide-and-conquer matrix product | O(n^log₂7) asymptotically | O(n²) auxiliary per active level |
+The issue list must first be sorted by ID in ascending order. The CLI does this using the integrated Merge Sort function before calling Binary Search.
 
-These remaining algorithms are retained as DAA demonstrations and tests; they are not forced into the issue-triage workflow where their use would be artificial.
+The search returns the zero-based array index when found, or -1 when the ID does not exist.
 
-## CLI demonstration
+**Complexity:** O(log n) time and O(1) auxiliary space. Sorting before searching costs O(n log n); repeated searches can reuse the sorted order until the issue list changes.
 
-1. Load sample repository data.
-2. Choose **Sort real issues** and select a criterion.
-3. Choose **Search issue by ID** and enter an ID such as 106.
-4. Try an unknown ID such as 999 to see the not-found result.
+## 3. Depth First Search — dependency cycle detection
+
+Each issue is a vertex. If issue A depends on issue B, the dependency is represented as a directed edge from A to B.
+
+DFS explores dependency paths and uses three states:
+
+- 0: not visited.
+- 1: currently being explored.
+- 2: completely explored.
+
+If DFS reaches a vertex in state 1, it has found a cycle. A cycle means a group of issues is waiting on one another and cannot be resolved in dependency order.
+
+The DFS traversal itself is O(V + E) with adjacency lists. In this implementation, dependency IDs are resolved by scanning the issue array, which adds O(V) lookup work per dependency edge. Therefore, the full dependency traversal can take O(VE) time in the worst case.
+
+## CLI workflow
+
+1. Load the sample repository data.
+2. View issues or developers.
+3. Run repository validation to check fields, references and dependency cycles.
+4. Sort actual issue records using Merge Sort.
+5. Search for an issue by ID using Binary Search.
 
 ## Tests
 
-The issue workflow test loads the sample CSV and verifies priority ordering, deadline ordering, ID ordering, successful lookup, missing lookup and invalid input handling. Run all suites with:
+The test suites cover:
+
+- CSV parsing and repository loading.
+- Required fields, duplicate IDs and dependency validation.
+- Circular dependency detection through DFS.
+- Sorting issue records by priority, deadline and ID.
+- Successful and unsuccessful issue lookup.
+
+Run all tests:
 
 ```bash
 ctest --test-dir build --output-on-failure
 ```
-
-The algorithm laboratory also covers sorting, both search variants, maximum-subarray edge cases, positive and negative powers, celebrity detection, and agreement between classical and Strassen multiplication on a non-power-of-two matrix.
