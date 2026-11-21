@@ -1,5 +1,6 @@
 #include "issueforge/issueforge.h"
 #include "issueforge/issue_workflow.h"
+#include "issueforge/assignment.h"
 
 #include <stdio.h>
 
@@ -14,18 +15,54 @@ static void display_menu(void) {
     puts("4. Validate repository (including dependency cycles)");
     puts("5. Sort real issues (Merge Sort)");
     puts("6. Search issue by ID (Binary Search)");
+    puts("7. Assign issues to developers (Greedy Algorithm)");
+    puts("8. View assignment results");
     puts("0. Exit");
     printf("Choose an option: ");
 }
 
+static const char *developer_name(const RepositoryData *data, int id) {
+    for (size_t i = 0; i < data->developer_count; ++i) {
+        if (data->developers[i].id == id)
+            return data->developers[i].name;
+    }
+    return "Unassigned";
+}
+
 static void print_issues(const RepositoryData *data) {
-    puts("\nID   PRIORITY  SEVERITY  DEADLINE  HOURS  STATUS       TITLE");
-    puts("--------------------------------------------------------------------------");
+    puts("\nID   PRIORITY  SEVERITY  DEADLINE  HOURS  ASSIGNED TO       STATUS       TITLE");
+    puts("------------------------------------------------------------------------------------------");
     for (size_t i = 0; i < data->issue_count; ++i) {
         const Issue *x = &data->issues[i];
-        printf("%-4d %-9s %-9d %-9d %-6d %-12s %s\n",
+        printf("%-4d %-9s %-9d %-9d %-6d %-17s %-12s %s\n",
                x->id, x->priority, x->severity, x->deadline_days,
-               x->estimated_hours, x->status, x->title);
+               x->estimated_hours,
+               developer_name(data, x->assigned_developer_id),
+               x->status, x->title);
+    }
+}
+
+static void print_assignment_results(const RepositoryData *data) {
+    puts("\nDEVELOPER ASSIGNMENT RESULTS");
+    puts("Issue  Developer          Hours");
+    puts("--------------------------------");
+    for (size_t i = 0; i < data->issue_count; ++i) {
+        const Issue *issue = &data->issues[i];
+        if (issue->assigned_developer_id != 0) {
+            printf("#%-5d %-18s %dh\n", issue->id,
+                   developer_name(data, issue->assigned_developer_id),
+                   issue->estimated_hours);
+        } else {
+            printf("#%-5d %-18s %dh (%s)\n", issue->id, "Unassigned",
+                   issue->estimated_hours, issue->status);
+        }
+    }
+
+    puts("\nUPDATED DEVELOPER CAPACITY");
+    for (size_t i = 0; i < data->developer_count; ++i) {
+        const Developer *developer = &data->developers[i];
+        printf("%-18s %d hour(s) remaining\n",
+               developer->name, developer->available_hours);
     }
 }
 
@@ -72,7 +109,6 @@ static void search_real_issue(RepositoryData *data) {
         return;
     }
 
-    /* Binary Search requires issue records to be sorted by ascending ID. */
     if (if_sort_issues(data->issues, data->issue_count, IF_SORT_BY_ID) != 0) {
         puts("Could not prepare issue list for searching.");
         return;
@@ -94,6 +130,25 @@ static void search_real_issue(RepositoryData *data) {
     printf("Severity:        %d/10\n", x->severity);
     printf("Estimated hours: %d\n", x->estimated_hours);
     printf("Deadline:        %d day(s)\n", x->deadline_days);
+    printf("Assigned to:     %s\n",
+           developer_name(data, x->assigned_developer_id));
+}
+
+static void assign_issues(RepositoryData *data) {
+    IFAssignmentSummary summary;
+
+    if (if_assign_issues_greedy(data, &summary) != 0) {
+        puts("Assignment could not be completed. Check the repository data.");
+        return;
+    }
+
+    puts("\nGreedy assignment completed.");
+    printf("Assigned issues:   %zu\n", summary.assigned_count);
+    printf("Unassigned issues: %zu (no matching skill or enough capacity)\n",
+           summary.unassigned_count);
+    printf("Skipped issues:    %zu (blocked or closed)\n",
+           summary.skipped_count);
+    print_assignment_results(data);
 }
 
 int main(void) {
@@ -138,7 +193,7 @@ int main(void) {
             continue;
         }
 
-        if (choice < 2 || choice > 6) {
+        if (choice < 2 || choice > 8) {
             puts("Unknown option. Try again.");
             continue;
         }
@@ -180,6 +235,14 @@ int main(void) {
 
             case 6:
                 search_real_issue(&data);
+                break;
+
+            case 7:
+                assign_issues(&data);
+                break;
+
+            case 8:
+                print_assignment_results(&data);
                 break;
         }
     }
